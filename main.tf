@@ -21,29 +21,40 @@ terraform {
   }
 }
 
-# Manually define users (NO CSV, NO JANE/ALICE, ADDED XYZ USER)
+# Manually define users and their assigned groups
 variable "users" {
   default = {
-    "xyz.user1@example.com" = {
-      first_name = "XYZ1"
-      last_name  = "User1"
-      email      = "xyz.user1@example.com"
-      login      = "xyz.user1@example.com"
-      password   = "XYZPass123!"
-      group      = "XYZ Group"
+    "xyz.admin@example.com" = {
+      first_name = "XYZ"
+      last_name  = "Admin"
+      email      = "xyz.admin@example.com"
+      login      = "xyz.admin@example.com"
+      password   = "XYZPassAdmin123!"
+      group      = "Admin Group"
+      role       = "SUPER_ADMIN"
     },
-    "xyz.user2@example.com" = {
-      first_name = "XYZ2"
-      last_name  = "User2"
-      email      = "xyz.user2@example.com"
-      login      = "xyz.user2@example.com"
-      password   = "XYZPass456!"
-      group      = "XYZ Group"
+    "xyz.appadmin@example.com" = {
+      first_name = "XYZ"
+      last_name  = "AppAdmin"
+      email      = "xyz.appadmin@example.com"
+      login      = "xyz.appadmin@example.com"
+      password   = "XYZPassApp123!"
+      group      = "App Admin Group"
+      role       = "APP_ADMIN"
+    },
+    "xyz.user@example.com" = {
+      first_name = "XYZ"
+      last_name  = "User"
+      email      = "xyz.user@example.com"
+      login      = "xyz.user@example.com"
+      password   = "XYZPassUser123!"
+      group      = "Standard Users"
+      role       = "READ_ONLY_ADMIN"
     }
   }
 }
 
-# CREATE new Okta users
+# CREATE Okta users dynamically
 resource "okta_user" "users" {
   for_each = var.users
 
@@ -54,16 +65,26 @@ resource "okta_user" "users" {
   password   = each.value.password
 }
 
-# CREATE XYZ Group
-resource "okta_group" "xyz_group" {
-  name        = "XYZ Group"
-  description = "Group for XYZ Users"
+# CREATE Okta groups dynamically based on assigned roles
+resource "okta_group" "groups" {
+  for_each = toset([for user in var.users : user.group])
+
+  name        = each.value
+  description = "Group for ${each.value}"
 }
 
-# ASSIGN users to XYZ Group
+# ASSIGN users to groups dynamically
 resource "okta_group_memberships" "group_assignments" {
   for_each = var.users
 
-  group_id = okta_group.xyz_group.id
+  group_id = okta_group.groups[each.value.group].id
   users    = [okta_user.users[each.key].id]
+}
+
+# CREATE Okta role assignments dynamically
+resource "okta_admin_role" "role_assignments" {
+  for_each = var.users
+
+  user_id = okta_user.users[each.key].id
+  role    = each.value.role
 }
