@@ -43,10 +43,11 @@ resource "okta_group" "engineering_team" {
 }
 
 # Assign users to the group
-resource "okta_group_memberships" "engineering_memberships" {
+rresource "okta_group_memberships" "engineering_memberships" {
   group_id = okta_group.engineering_team.id
-  members  = [
+  users    = [
     okta_user.example_user.id,
     okta_user.another_user.id
   ]
 }
+
