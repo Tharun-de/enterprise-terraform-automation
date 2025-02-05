@@ -17,3 +17,38 @@ terraform {
     }
   }
 }
+# Define an Okta user
+resource "okta_user" "example_user" {
+  first_name = "John"
+  last_name  = "Doe"
+  email      = "john.doe@example.com"
+  login      = "john.doe@example.com"
+  password   = "StrongPassword123!"
+}
+
+# Define another Okta user
+resource "okta_user" "another_user" {
+  first_name = "Jane"
+  last_name  = "Smith"
+  email      = "jane.smith@example.com"
+  login      = "jane.smith@example.com"
+  password   = "AnotherSecurePassword123!"
+}
+
+# Create an Okta group
+resource "okta_group" "engineering_team" {
+  name        = "Engineering Team"
+  description = "Group for engineering team members"
+}
+
+# Assign users to the group
+resource "okta_group_membership" "engineering_membership_john" {
+  group_id = okta_group.engineering_team.id
+  user_id  = okta_user.example_user.id
+}
+
+resource "okta_group_membership" "engineering_membership_jane" {
+  group_id = okta_group.engineering_team.id
+  user_id  = okta_user.another_user.id
+}
+
