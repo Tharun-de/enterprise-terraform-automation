@@ -6,7 +6,7 @@ variable "okta_api_token" {
 
 # Configure the Okta provider
 provider "okta" {
-  org_name  = "trial-2582192"
+  org_name  = "trial-2582192"  # Replace with your Okta org name
   base_url  = "okta.com"
   api_token = var.okta_api_token
 }
@@ -26,40 +26,7 @@ data "external" "csv_users" {
   program = ["python3", "${path.module}/parse_csv.py"]
 }
 
-# Retrieve all existing Okta users
-data "okta_users" "existing_users" {}
-
-# DELETE all existing Okta users by ID
-resource "okta_user" "delete_users" {
-  for_each = { for user in data.okta_users.existing_users.users : user.id => user }
-
-  id = each.key  # Delete by ID only
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
-# Retrieve all existing Okta groups
-data "okta_groups" "existing_groups" {}
-
-# DELETE all existing Okta groups by ID
-resource "okta_group" "delete_groups" {
-  for_each = { for group in data.okta_groups.existing_groups.groups : group.id => group }
-
-  id = each.key  # Delete by ID only
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
-# Wait for all deletions to complete before recreating users & groups
-resource "null_resource" "wait_for_deletion" {
-  depends_on = [okta_user.delete_users, okta_group.delete_groups]
-}
-
-# CREATE new users from CSV after deletion
+# CREATE new Okta users from CSV data
 resource "okta_user" "users" {
   for_each = { for user in data.external.csv_users.result.users : user.email => user }
 
@@ -68,18 +35,14 @@ resource "okta_user" "users" {
   email      = each.value.email
   login      = each.value.login
   password   = each.value.password
-
-  depends_on = [null_resource.wait_for_deletion]
 }
 
-# CREATE Okta groups dynamically from CSV
+# CREATE Okta groups dynamically based on CSV data
 resource "okta_group" "groups" {
   for_each = toset([for user in data.external.csv_users.result.users : user.group])
 
   name        = each.value
   description = "Group for ${each.value}"
-
-  depends_on = [null_resource.wait_for_deletion]
 }
 
 # ASSIGN users to their respective groups
