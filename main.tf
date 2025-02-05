@@ -86,9 +86,10 @@ resource "okta_group_memberships" "group_assignments" {
 # Ensure the 'requests' module is installed before running the script (for Linux)
 resource "null_resource" "install_requests" {
   provisioner "local-exec" {
-    command = "bash ${path.module}/install_requests.sh"
+    command = "pip3 install requests"
   }
 }
+
 
 # CALL EXTERNAL SCRIPT TO ASSIGN OKTA ADMIN ROLES
 data "external" "assign_roles" {
