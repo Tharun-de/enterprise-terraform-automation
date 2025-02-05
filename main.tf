@@ -81,6 +81,13 @@ resource "okta_group_memberships" "group_assignments" {
   users    = [okta_user.users[each.key].id]
 }
 
+# Ensure the 'requests' module is installed before running the script (for Windows)
+resource "null_resource" "install_requests" {
+  provisioner "local-exec" {
+    command = "powershell -ExecutionPolicy Bypass -File ${path.module}/install_requests.ps1"
+  }
+}
+
 # CALL EXTERNAL SCRIPT TO ASSIGN OKTA ADMIN ROLES
 data "external" "assign_roles" {
   for_each = var.users
@@ -92,4 +99,6 @@ data "external" "assign_roles" {
     role       = each.value.role
     api_token  = var.okta_api_token
   }
+
+  depends_on = [null_resource.install_requests]
 }
