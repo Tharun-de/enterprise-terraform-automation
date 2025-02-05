@@ -1,11 +1,11 @@
 first_name,last_name,email,login,password,group
-John,Doe,john.doe@example.com,john.doe@example.com,SecurePass123!,Engineering Team
-Jane,Smith,jane.smith@example.com,jane.smith@example.com,AnotherPass456!,Engineering Team
+Johne,Doee,johne.doe@example.com,johne.doee@example.com,SecurePass123!,Marketing Team
+Jane,Smith,jane.smith@example.com,jane.smith@example.com,AnotherPass456!,Marketing Team
 Alice,Johnson,alice.johnson@example.com,alice.johnson@example.com,WelcomePass789!,Finance Team
 Robert,Brown,robert.brown@example.com,robert.brown@example.com,HRsecurePass234!,HR Team
 Michael,Garcia,michael.garcia@example.com,michael.garcia@example.com,ItTeamPass789!,IT Support
 Emily,Davis,emily.davis@example.com,emily.davis@example.com,Marketing123!,Marketing Team
-David,Wilson,david.wilson@example.com,david.wilson@example.com,EngTeamPass654!,Engineering Team
+David,Wilson,david.wilson@example.com,david.wilson@example.com,EngTeamPass654!,Marketing Team
 Olivia,Martinez,olivia.martinez@example.com,olivia.martinez@example.com,HRsecure456!,HR Team
 Daniel,Anderson,daniel.anderson@example.com,daniel.anderson@example.com,ItAdminPass987!,IT Support
 Sophia,Thomas,sophia.thomas@example.com,sophia.thomas@example.com,Marketing789!,Marketing Team
