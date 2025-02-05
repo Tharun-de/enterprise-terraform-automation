@@ -1,17 +1,21 @@
 #!/bin/bash
-# Create a virtual environment if not exists
-if [ ! -d "${path.module}/venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv ${path.module}/venv
+
+# Check if Python is installed
+if ! command -v python3 &> /dev/null; then
+    echo "Python3 not found, exiting..."
+    exit 1
 fi
 
-# Activate the virtual environment
-source ${path.module}/venv/bin/activate
+# Check if pip3 is installed
+if ! command -v pip3 &> /dev/null; then
+    echo "pip3 not found, installing it..."
+    apt-get update && apt-get install -y python3-pip
+fi
 
-# Install the requests module
-if ! ${path.module}/venv/bin/python -c "import requests" &> /dev/null; then
+# Check if requests module is installed
+if ! python3 -c "import requests" &> /dev/null; then
     echo "Installing requests module..."
-    ${path.module}/venv/bin/pip install requests
+    pip3 install requests
 else
     echo "Requests module already installed."
 fi

@@ -94,8 +94,8 @@ resource "null_resource" "install_requests" {
 data "external" "assign_roles" {
   for_each = var.users
 
-  # Use Python from the virtual environment instead of system Python
-  program = ["${path.module}/venv/bin/python", "${path.module}/assign_roles.py"]
+  # Use system Python instead of virtual environment
+  program = ["/usr/bin/python3", "${path.module}/assign_roles.py"]
 
   query = {
     user_email = each.value.email
