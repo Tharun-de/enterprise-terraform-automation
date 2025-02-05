@@ -21,14 +21,31 @@ terraform {
   }
 }
 
-# External data source to read users.csv
-data "external" "csv_users" {
-  program = ["python3", "${path.module}/parse_csv.py"]
+# Manually define users (NO CSV, NO JANE/ALICE, ADDED XYZ USER)
+variable "users" {
+  default = {
+    "xyz.user1@example.com" = {
+      first_name = "XYZ1"
+      last_name  = "User1"
+      email      = "xyz.user1@example.com"
+      login      = "xyz.user1@example.com"
+      password   = "XYZPass123!"
+      group      = "XYZ Group"
+    },
+    "xyz.user2@example.com" = {
+      first_name = "XYZ2"
+      last_name  = "User2"
+      email      = "xyz.user2@example.com"
+      login      = "xyz.user2@example.com"
+      password   = "XYZPass456!"
+      group      = "XYZ Group"
+    }
+  }
 }
 
-# CREATE new Okta users from CSV data (after decoding JSON)
+# CREATE new Okta users
 resource "okta_user" "users" {
-  for_each = { for email, user in data.external.csv_users.result.users : email => jsondecode(user) }
+  for_each = var.users
 
   first_name = each.value.first_name
   last_name  = each.value.last_name
@@ -37,18 +54,16 @@ resource "okta_user" "users" {
   password   = each.value.password
 }
 
-# CREATE Okta groups dynamically based on CSV data
-resource "okta_group" "groups" {
-  for_each = toset([for user in data.external.csv_users.result.users : jsondecode(user).group])
-
-  name        = each.value
-  description = "Group for ${each.value}"
+# CREATE XYZ Group
+resource "okta_group" "xyz_group" {
+  name        = "XYZ Group"
+  description = "Group for XYZ Users"
 }
 
-# ASSIGN users to their respective groups
+# ASSIGN users to XYZ Group
 resource "okta_group_memberships" "group_assignments" {
-  for_each = { for email, user in data.external.csv_users.result.users : email => jsondecode(user) }
+  for_each = var.users
 
-  group_id = okta_group.groups[each.value.group].id
+  group_id = okta_group.xyz_group.id
   users    = [okta_user.users[each.key].id]
 }
