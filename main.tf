@@ -1,4 +1,4 @@
-# Define sensitive Okta API token variable
+# Define Okta API token as a sensitive variable
 variable "okta_api_token" {
   type      = string
   sensitive = true
@@ -26,40 +26,40 @@ data "external" "csv_users" {
   program = ["python3", "${path.module}/parse_csv.py"]
 }
 
-# Retrieve existing Okta users to delete them first
+# Retrieve all existing Okta users
 data "okta_users" "existing_users" {}
 
-# Delete all existing users in Okta before re-creating them
+# DELETE all existing Okta users by ID
 resource "okta_user" "delete_users" {
   for_each = { for user in data.okta_users.existing_users.users : user.id => user }
 
-  id = each.key
+  id = each.key  # Delete by ID only
 
   lifecycle {
     prevent_destroy = false
   }
 }
 
-# Retrieve existing Okta groups to delete them before recreating
+# Retrieve all existing Okta groups
 data "okta_groups" "existing_groups" {}
 
-# Delete all existing groups in Okta before re-creating them
+# DELETE all existing Okta groups by ID
 resource "okta_group" "delete_groups" {
   for_each = { for group in data.okta_groups.existing_groups.groups : group.id => group }
 
-  id = each.key
+  id = each.key  # Delete by ID only
 
   lifecycle {
     prevent_destroy = false
   }
 }
 
-# Wait for deletion to complete before creating new users and groups
+# Wait for all deletions to complete before recreating users & groups
 resource "null_resource" "wait_for_deletion" {
   depends_on = [okta_user.delete_users, okta_group.delete_groups]
 }
 
-# Create Okta users from CSV data
+# CREATE new users from CSV after deletion
 resource "okta_user" "users" {
   for_each = { for user in data.external.csv_users.result.users : user.email => user }
 
@@ -72,7 +72,7 @@ resource "okta_user" "users" {
   depends_on = [null_resource.wait_for_deletion]
 }
 
-# Create Okta groups dynamically from CSV data
+# CREATE Okta groups dynamically from CSV
 resource "okta_group" "groups" {
   for_each = toset([for user in data.external.csv_users.result.users : user.group])
 
@@ -82,7 +82,7 @@ resource "okta_group" "groups" {
   depends_on = [null_resource.wait_for_deletion]
 }
 
-# Assign users to groups dynamically
+# ASSIGN users to their respective groups
 resource "okta_group_memberships" "group_assignments" {
   for_each = { for user in data.external.csv_users.result.users : user.email => user }
 
