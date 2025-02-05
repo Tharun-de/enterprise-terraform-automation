@@ -31,15 +31,20 @@ variable "users" {
   }))
 }
 
+# Ensure 'requests' module is installed
 resource "null_resource" "install_requests" {
   provisioner "local-exec" {
-    command = "pip3 install requests"
+    command = "pip3 install requests --user"
   }
 }
 
+# Assign roles using an external Python script
 data "external" "assign_roles" {
   for_each = var.users
-  program  = ["/usr/bin/python3", "${path.module}/assign_roles.py"]
+
+  depends_on = [null_resource.install_requests] # Ensure 'requests' is installed first
+
+  program = ["/usr/bin/python3", "${path.module}/assign_roles.py"]
 
   query = {
     email = each.value.email
