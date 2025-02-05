@@ -4,10 +4,6 @@ terraform {
       source  = "okta/okta"
       version = "3.42.0"
     }
-    external = {
-      source  = "hashicorp/external"
-      version = "2.3.4"
-    }
   }
 }
 
@@ -31,27 +27,7 @@ variable "users" {
   }))
 }
 
-# Ensure 'requests' module is installed
-resource "null_resource" "install_requests" {
-  provisioner "local-exec" {
-    command = "pip3 install requests --user"
-  }
-}
-
-# Assign roles using an external Python script
-data "external" "assign_roles" {
-  for_each = var.users
-
-  depends_on = [null_resource.install_requests] # Ensure 'requests' is installed first
-
-  program = ["/usr/bin/python3", "${path.module}/assign_roles.py"]
-
-  query = {
-    email = each.value.email
-    role  = each.value.role
-  }
-}
-
+# Create Okta users
 resource "okta_user" "users" {
   for_each = var.users
 
@@ -62,6 +38,7 @@ resource "okta_user" "users" {
   status     = "ACTIVE"
 }
 
+# Create Okta groups
 resource "okta_group" "groups" {
   for_each = toset(["Admin Group", "App Admin Group", "Standard Users"])
 
@@ -69,9 +46,22 @@ resource "okta_group" "groups" {
   description = "Group for ${each.value}"
 }
 
+# Assign users to groups
 resource "okta_group_memberships" "group_assignments" {
   for_each = var.users
 
   group_id = okta_group.groups[each.value.role].id
   users    = [okta_user.users[each.key].id]
+}
+
+# Assign roles to users
+resource "okta_user_roles" "user_roles" {
+  for_each = var.users
+
+  user_id = okta_user.users[each.key].id
+  role    = lookup({
+    "Admin Group"       = "ORG_ADMIN"
+    "App Admin Group"   = "APP_ADMIN"
+    "Standard Users"    = "USER"
+  }, each.value.role, "USER") # Default to USER role if none specified
 }
