@@ -29,7 +29,7 @@ variable "users" {
       last_name  = "Admin"
       email      = "xyz.admin@example.com"
       login      = "xyz.admin@example.com"
-      password   = "XYZPassAdmin123!"
+      password   = "Str0ngP@ssw0rd!Admin" # Updated secure password
       group      = "Admin Group"
       role       = "SUPER_ADMIN"
     },
@@ -38,7 +38,7 @@ variable "users" {
       last_name  = "AppAdmin"
       email      = "xyz.appadmin@example.com"
       login      = "xyz.appadmin@example.com"
-      password   = "XYZPassApp123!"
+      password   = "S3cur3P@ssw0rd!App" # Updated secure password
       group      = "App Admin Group"
       role       = "APP_ADMIN"
     },
@@ -47,7 +47,7 @@ variable "users" {
       last_name  = "User"
       email      = "xyz.user@example.com"
       login      = "xyz.user@example.com"
-      password   = "XYZPassUser123!"
+      password   = "C0mpl3xP@ssw0rd!User" # Updated secure password
       group      = "Standard Users"
       role       = "READ_ONLY_ADMIN"
     }
@@ -81,10 +81,10 @@ resource "okta_group_memberships" "group_assignments" {
   users    = [okta_user.users[each.key].id]
 }
 
-# Ensure the 'requests' module is installed before running the script (for Windows)
+# Ensure the 'requests' module is installed before running the script (for Linux)
 resource "null_resource" "install_requests" {
   provisioner "local-exec" {
-    command = "powershell -ExecutionPolicy Bypass -File ${path.module}/install_requests.ps1"
+    command = "bash ${path.module}/install_requests.sh"
   }
 }
 
