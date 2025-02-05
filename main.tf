@@ -17,6 +17,7 @@ terraform {
     }
   }
 }
+
 # Define an Okta user
 resource "okta_user" "example_user" {
   first_name = "John"
@@ -42,13 +43,10 @@ resource "okta_group" "engineering_team" {
 }
 
 # Assign users to the group
-resource "okta_group_membership" "engineering_membership_john" {
+resource "okta_group_memberships" "engineering_memberships" {
   group_id = okta_group.engineering_team.id
-  user_id  = okta_user.example_user.id
+  members  = [
+    okta_user.example_user.id,
+    okta_user.another_user.id
+  ]
 }
-
-resource "okta_group_membership" "engineering_membership_jane" {
-  group_id = okta_group.engineering_team.id
-  user_id  = okta_user.another_user.id
-}
-
