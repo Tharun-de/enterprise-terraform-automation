@@ -54,14 +54,14 @@ resource "okta_group_memberships" "group_assignments" {
   users    = [okta_user.users[each.key].id]
 }
 
-# Assign roles to users
-resource "okta_user_roles" "user_roles" {
+# **Assign Okta roles to users using okta_role_assignment**
+resource "okta_role_assignment" "user_roles" {
   for_each = var.users
 
   user_id = okta_user.users[each.key].id
   role    = lookup({
-    "Admin Group"       = "ORG_ADMIN"
-    "App Admin Group"   = "APP_ADMIN"
+    "Admin Group"       = "ORG_ADMIN",
+    "App Admin Group"   = "APP_ADMIN",
     "Standard Users"    = "USER"
   }, each.value.role, "USER") # Default to USER role if none specified
 }
