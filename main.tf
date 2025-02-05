@@ -86,9 +86,10 @@ resource "okta_group_memberships" "group_assignments" {
 # Ensure the 'requests' module is installed before running the script (for Linux)
 resource "null_resource" "install_requests" {
   provisioner "local-exec" {
-    command = "pip3 install requests"
+    command = "pip3 install urllib3==1.26.16 requests==2.26.0"
   }
 }
+
 
 
 # CALL EXTERNAL SCRIPT TO ASSIGN OKTA ADMIN ROLES
@@ -96,7 +97,9 @@ data "external" "assign_roles" {
   for_each = var.users
 
   # Use system Python and packaged dependencies
-  program = ["python3", "${path.module}/assign_roles.py"]
+  program = ["C:/Users/DELTA/OneDrive/Desktop/enterprise-terraform-automation/venv/Scripts/python.exe", "${path.module}/assign_roles.py"]
+
+
 
   query = {
     user_email = each.value.email
