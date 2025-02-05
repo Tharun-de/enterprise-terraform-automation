@@ -1,6 +1,16 @@
-import requests
-import json
+#!/usr/bin/env python3
+
 import sys
+import subprocess
+
+# Ensure 'requests' is installed
+try:
+    import requests
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
+    import requests  # Import again after installation
+
+import json
 
 # Get input data from Terraform
 input_data = json.loads(sys.stdin.read())
@@ -21,7 +31,7 @@ HEADERS = {
 def get_user_id(email):
     url = f"https://{OKTA_DOMAIN}/api/v1/users?q={email}"
     response = requests.get(url, headers=HEADERS)
-    
+
     if response.status_code == 200 and len(response.json()) > 0:
         return response.json()[0]["id"]
     else:
