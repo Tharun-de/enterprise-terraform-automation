@@ -94,7 +94,7 @@ resource "null_resource" "install_requests" {
 data "external" "assign_roles" {
   for_each = var.users
 
-  # Use system Python instead of virtual environment
+  # Use system Python and packaged dependencies
   program = ["python3", "${path.module}/assign_roles.py"]
 
   query = {
@@ -103,3 +103,4 @@ data "external" "assign_roles" {
     api_token  = var.okta_api_token
   }
 }
+

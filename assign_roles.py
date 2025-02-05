@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
-import subprocess
+import os
 
-# Ensure 'requests' is installed
-try:
-    import requests
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    import requests  # Import again after installation
+# Manually add local 'python_modules' path to Python's module search path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "python_modules"))
 
+import requests
 import json
 
 # Get input data from Terraform
