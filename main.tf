@@ -83,6 +83,7 @@ resource "okta_group_memberships" "group_assignments" {
 }
 
 # Ensure the 'requests' module is installed before running the script (for Linux)
+# Ensure the 'requests' module is installed before running the script (for Linux)
 resource "null_resource" "install_requests" {
   provisioner "local-exec" {
     command = "bash ${path.module}/install_requests.sh"
@@ -93,7 +94,8 @@ resource "null_resource" "install_requests" {
 data "external" "assign_roles" {
   for_each = var.users
 
-  program = ["python3", "${path.module}/assign_roles.py"]
+  # Use Python from the virtual environment instead of system Python
+  program = ["${path.module}/venv/bin/python", "${path.module}/assign_roles.py"]
 
   query = {
     user_email = each.value.email

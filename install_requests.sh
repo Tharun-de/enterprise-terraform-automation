@@ -1,8 +1,17 @@
 #!/bin/bash
-# Check if 'requests' module is installed
-if ! python3 -c "import requests" &> /dev/null; then
+# Create a virtual environment if not exists
+if [ ! -d "${path.module}/venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv ${path.module}/venv
+fi
+
+# Activate the virtual environment
+source ${path.module}/venv/bin/activate
+
+# Install the requests module
+if ! ${path.module}/venv/bin/python -c "import requests" &> /dev/null; then
     echo "Installing requests module..."
-    pip3 install requests
+    ${path.module}/venv/bin/pip install requests
 else
     echo "Requests module already installed."
 fi
