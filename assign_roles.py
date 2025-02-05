@@ -1,67 +1,68 @@
-#!/usr/bin/env python3
-
+import subprocess
 import sys
-import os
-
-# Manually add local 'python_modules' path to Python's module search path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "python_modules"))
-
-import requests
 import json
+import requests
 
-# Get input data from Terraform
-input_data = json.loads(sys.stdin.read())
+# Ensure correct urllib3 and requests versions
+try:
+    import urllib3
+    # Check if urllib3 is the correct version
+    if urllib3.__version__ != "1.26.16":
+        raise ImportError("Incorrect urllib3 version detected")
+except ImportError:
+    print("Installing correct urllib3 and requests versions...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "urllib3==1.26.16", "requests==2.26.0"])
+    import requests  # Import again after installation
+    import urllib3
 
-# Extract required values
-user_email = input_data.get("user_email")
-role = input_data.get("role")
-api_token = input_data.get("api_token")
+# Disable SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Define Okta API details
-OKTA_DOMAIN = "trial-2582192.okta.com"
+# Okta API Details
+OKTA_DOMAIN = "https://trial-2582192.okta.com"
+OKTA_API_TOKEN = "001sAoRTIR_jh_GAwDeZd21YN2sl50JJhPodU60Qbo"
+
 HEADERS = {
-    "Authorization": f"SSWS {api_token}",
-    "Content-Type": "application/json"
+    "Authorization": f"SSWS {OKTA_API_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
 }
 
-# Get User ID from Email
-def get_user_id(email):
-    url = f"https://{OKTA_DOMAIN}/api/v1/users?q={email}"
-    response = requests.get(url, headers=HEADERS)
+# Read input from Terraform
+def read_input():
+    try:
+        input_data = json.load(sys.stdin)
+        return input_data
+    except json.JSONDecodeError as e:
+        print(f"Error reading input JSON: {e}")
+        sys.exit(1)
 
-    if response.status_code == 200 and len(response.json()) > 0:
-        return response.json()[0]["id"]
+# Assign role to user in Okta
+def assign_role(user_email, role_type):
+    user_search_url = f"{OKTA_DOMAIN}/api/v1/users/{user_email}"
+    response = requests.get(user_search_url, headers=HEADERS, verify=False)
+
+    if response.status_code == 200:
+        user_id = response.json()["id"]
+        assign_role_url = f"{OKTA_DOMAIN}/api/v1/users/{user_id}/roles"
+        role_payload = {"type": role_type}
+
+        role_response = requests.post(assign_role_url, headers=HEADERS, json=role_payload, verify=False)
+
+        if role_response.status_code == 200 or role_response.status_code == 201:
+            return {"status": "success", "message": f"Role {role_type} assigned to {user_email}"}
+        else:
+            return {"status": "error", "message": f"Failed to assign role {role_type}: {role_response.text}"}
     else:
-        print(json.dumps({"error": f"User {email} not found in Okta."}))
-        sys.exit(1)
+        return {"status": "error", "message": f"User not found: {user_email}"}
 
-# Assign Role to User
-def assign_role(user_id, role_type):
-    role_map = {
-        "SUPER_ADMIN": "SUPER_ADMIN",
-        "APP_ADMIN": "APP_ADMIN",
-        "READ_ONLY_ADMIN": "READ_ONLY_ADMIN"
-    }
+# Main function to process Terraform input
+if __name__ == "__main__":
+    input_data = read_input()
+    user_email = input_data.get("user_email")
+    role_type = input_data.get("role_type", "APP_ADMIN")  # Default to APP_ADMIN if not provided
 
-    if role_type not in role_map:
-        print(json.dumps({"error": f"Invalid role type: {role_type}"}))
-        sys.exit(1)
+    result = assign_role(user_email, role_type)
 
-    role_url = f"https://{OKTA_DOMAIN}/api/v1/users/{user_id}/roles"
-    payload = {"type": role_map[role_type]}
-
-    response = requests.post(role_url, headers=HEADERS, json=payload)
-
-    if response.status_code == 204:
-        print(json.dumps({"success": f"Assigned {role_type} role to {user_email}"}))
-    else:
-        print(json.dumps({"error": f"Failed to assign role {role_type} to {user_email}. API Response: {response.text}"}))
-        sys.exit(1)
-
-# Execute the Role Assignment
-try:
-    user_id = get_user_id(user_email)
-    assign_role(user_id, role)
-except Exception as e:
-    print(json.dumps({"error": f"Unexpected error: {str(e)}"}))
-    sys.exit(1)
+    # Output result in Terraform expected format
+    print(json.dumps(result))
