@@ -29,7 +29,7 @@ variable "users" {
       last_name  = "Admin"
       email      = "xyz.admin@example.com"
       login      = "xyz.admin@example.com"
-      password   = "Str0ngP@ssw0rd!Admin" # Updated secure password
+      password   = "P@ssw0rd!XyzA#12" # Fully meets Okta policy
       group      = "Admin Group"
       role       = "SUPER_ADMIN"
     },
@@ -38,7 +38,7 @@ variable "users" {
       last_name  = "AppAdmin"
       email      = "xyz.appadmin@example.com"
       login      = "xyz.appadmin@example.com"
-      password   = "S3cur3P@ssw0rd!App" # Updated secure password
+      password   = "S3cur3P@ss!XyzA$34" # Fully meets Okta policy
       group      = "App Admin Group"
       role       = "APP_ADMIN"
     },
@@ -47,12 +47,13 @@ variable "users" {
       last_name  = "User"
       email      = "xyz.user@example.com"
       login      = "xyz.user@example.com"
-      password   = "C0mpl3xP@ssw0rd!User" # Updated secure password
+      password   = "U$3r!P@ssXyz12#" # Fully meets Okta policy
       group      = "Standard Users"
       role       = "READ_ONLY_ADMIN"
     }
   }
 }
+
 
 # CREATE Okta users dynamically
 resource "okta_user" "users" {

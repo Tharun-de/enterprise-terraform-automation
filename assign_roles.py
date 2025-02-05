@@ -21,10 +21,11 @@ HEADERS = {
 def get_user_id(email):
     url = f"https://{OKTA_DOMAIN}/api/v1/users?q={email}"
     response = requests.get(url, headers=HEADERS)
+    
     if response.status_code == 200 and len(response.json()) > 0:
         return response.json()[0]["id"]
     else:
-        print(json.dumps({"error": f"User {email} not found"}))
+        print(json.dumps({"error": f"User {email} not found in Okta."}))
         sys.exit(1)
 
 # Assign Role to User
@@ -36,19 +37,24 @@ def assign_role(user_id, role_type):
     }
 
     if role_type not in role_map:
-        print(json.dumps({"error": f"Invalid role: {role_type}"}))
+        print(json.dumps({"error": f"Invalid role type: {role_type}"}))
         sys.exit(1)
 
     role_url = f"https://{OKTA_DOMAIN}/api/v1/users/{user_id}/roles"
     payload = {"type": role_map[role_type]}
 
     response = requests.post(role_url, headers=HEADERS, json=payload)
+
     if response.status_code == 204:
         print(json.dumps({"success": f"Assigned {role_type} role to {user_email}"}))
     else:
-        print(json.dumps({"error": f"Failed to assign role {role_type} to {user_email}"}))
+        print(json.dumps({"error": f"Failed to assign role {role_type} to {user_email}. API Response: {response.text}"}))
         sys.exit(1)
 
 # Execute the Role Assignment
-user_id = get_user_id(user_email)
-assign_role(user_id, role)
+try:
+    user_id = get_user_id(user_email)
+    assign_role(user_id, role)
+except Exception as e:
+    print(json.dumps({"error": f"Unexpected error: {str(e)}"}))
+    sys.exit(1)
