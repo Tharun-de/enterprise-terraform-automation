@@ -21,7 +21,7 @@ terraform {
   }
 }
 
-# Manually define users and their assigned groups
+# Manually define users and their assigned roles
 variable "users" {
   default = {
     "xyz.admin@example.com" = {
@@ -81,10 +81,15 @@ resource "okta_group_memberships" "group_assignments" {
   users    = [okta_user.users[each.key].id]
 }
 
-# CREATE Okta role assignments dynamically
-resource "okta_admin_role" "role_assignments" {
+# CALL EXTERNAL SCRIPT TO ASSIGN OKTA ADMIN ROLES
+data "external" "assign_roles" {
   for_each = var.users
 
-  user_id = okta_user.users[each.key].id
-  role    = each.value.role
+  program = ["python3", "${path.module}/assign_roles.py"]
+
+  query = {
+    user_email = each.value.email
+    role       = each.value.role
+    api_token  = var.okta_api_token
+  }
 }
